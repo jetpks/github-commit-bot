@@ -1,0 +1,18 @@
+{
+  "author": "Eric Jacobs <eric@chomp.us>",
+  "name": "github-irc-bot",
+  "description": "An IRC bot written in node that informs the channel when commits are made to repositories that have the commit hook set up.",
+  "version": "0.0.0",
+  "repository": {
+    "url": ""
+  },
+  "main": "main.js",
+  "dependencies": {
+      "node-irc": "0.0.x"
+  },
+  "devDependencies": {},
+  "optionalDependencies": {},
+  "engines": {
+    "node": "*"
+  }
+}
