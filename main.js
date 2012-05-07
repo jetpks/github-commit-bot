@@ -88,6 +88,7 @@
     });
 
     req.on('end', function() {
+      res.end('Thanks!');
       data = JSON.parse(rawData);
       data.commits.forEach(function(commit, index) {
         var link
