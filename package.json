@@ -8,7 +8,7 @@
   },
   "main": "main.js",
   "dependencies": {
-      "node-irc": "0.0.x"
+    "irc": "~0.3.4"
   },
   "devDependencies": {},
   "optionalDependencies": {},
