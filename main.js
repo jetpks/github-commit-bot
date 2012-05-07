@@ -51,7 +51,13 @@
       , req = http.request(reqOps, function(res) {
           res.setEncoding('utf8');
           res.on('data', function(data) {
-            data = JSON.parse(data);
+            try {
+              data = JSON.parse(data);
+            } catch(e) {
+              console.err('Bad data from shortener..');
+              cb(longLink);
+              return;
+            }
             if(!data.hasOwnProperty('url')) {
               console.err('Problem calling shortener...');
               cb(longLink);
@@ -74,6 +80,10 @@
     req.setEncoding('utf8');
 
     req.on('data', function(chunk) {
+      if(!chunk) {
+        console.log('Empty data from github...');
+        return;
+      }
       rawData += decodeURIComponent(chunk.replace(/^payload=/, ''));
     });
 
