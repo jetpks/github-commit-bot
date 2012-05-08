@@ -4,6 +4,7 @@
   /* Requires */
   var irc = require('irc')
     , http = require('http')
+    , qs = require('qs')
   /* IRC Stuff */
     , config = require('./config.js')
     , ircClient = new irc.Client(config.server, config.nick, {
@@ -30,8 +31,8 @@
 
   process.on('uncaughtException', function(err) {
     ircClient.say(channel,
-      irc.colors.wrap("Caught an exception just before I crashed. Please check my log and fix me."));
-    console.err(err);
+      irc.colors.wrap('dark_red', "Caught an exception just before I crashed. Please check my log and fix me."));
+    console.error(err);
   });
 
 
@@ -96,15 +97,14 @@
 
     req.on('data', function(chunk) {
       if(!chunk) {
-        console.log('Empty data from github...');
         return;
       }
-      rawData += decodeURIComponent(chunk.replace(/^payload=/, ''));
+      rawData += chunk.replace(/^payload=/, '');
     });
 
     req.on('end', function() {
       res.end('Thanks!');
-      data = JSON.parse(rawData);
+      data = JSON.parse(decodeURIComponent(rawData));
       data.commits.forEach(function(commit, index) {
         var link
           ;
