@@ -131,6 +131,6 @@
     });
 
   });
-  gitReceive.listen(63000);
+  gitReceive.listen(config.gitPostPort);
 
 }());

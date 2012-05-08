@@ -7,4 +7,8 @@ module.exports = {
   , selfSigned: true
   , floodProtectionDelay: 250
   , password: 'some_awesome_password'
+  , shortener: {
+        host: '0hr.co'
+    }
+  , gitPostPort: 63000
 }
