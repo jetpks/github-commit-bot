@@ -125,11 +125,9 @@
             + irc.colors.wrap('magenta', ' >> ')
             + irc.colors.wrap('light_green', shortLink)
           );
-
         });
       });
     });
-
   });
   gitReceive.listen(config.gitPostPort);
 
