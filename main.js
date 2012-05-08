@@ -4,7 +4,6 @@
   /* Requires */
   var irc = require('irc')
     , http = require('http')
-    , qs = require('qs')
   /* IRC Stuff */
     , config = require('./config.js')
     , ircClient = new irc.Client(config.server, config.nick, {
