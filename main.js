@@ -1,6 +1,6 @@
-/*jshint laxcomma:true node:true es5:true*/
 (function() {
   "use strict";
+
   /* Requires */
   var irc = require('irc')
     , http = require('http')
@@ -12,13 +12,28 @@
         , secure: config.secure
         , selfSigned: config.selfSigned
         , floodProtectionDelay: config.floodProtectionDelay
-   //     , password: config.password
+        , password: config.password
       })
     , maxCommitMsg = 140
+    , nickMatch = new RegExp(config.nick, "gi")
+    , channel = config.channels[0]
   /* HTTP Stuff */
     , gitReceive = http.createServer()
     , shortServer = config.shortener.host
     ;
+
+  /**
+   *
+   * Prevent Crashes! (sometimes github sends bad data)
+   *
+   */
+
+  process.on('uncaughtException', function(err) {
+    ircClient.say(channel,
+      irc.colors.wrap("Caught an exception just before I crashed. Please check my log and fix me."));
+    console.err(err);
+  });
+
 
   /* IRC Stuff */  
   ircClient.addListener('message' + config.channels[0], function(user, message) {
@@ -28,7 +43,7 @@
       ;
     console.log(user + ' => ' + message);
 
-    if(/telenull_bot/.test(message)) {
+    if(nickMatch.test(message)) {
       ircClient.say(config.channels[0], "I'm a hippopotamus!");
     }
 
@@ -108,7 +123,7 @@
             + ': '
             + commit.message
             + irc.colors.wrap('magenta', ' >> ')
-            + shortLink
+            + irc.colors.wrap('light_green', shortLink)
           );
 
         });
