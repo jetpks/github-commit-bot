@@ -1,30 +1,34 @@
 (function() {
   "use strict";
 
+  //TODO seperate this out into several different files...
+
   /* Requires */
   var irc = require('irc')
     , http = require('http')
-  /* IRC Stuff */
-    , config = require('./config.js')
-    , ircClient = new irc.Client(config.server, config.nick, {
-          channels: config.channels
-        , port: config.port
-        , secure: config.secure
-        , selfSigned: config.selfSigned
-        , floodProtectionDelay: config.floodProtectionDelay
-        , password: config.password
-      })
-    , maxCommitMsg = 140
-    , nickMatch = new RegExp(config.nick, "gi")
-    , channel = config.channels[0]
+    , gv = require('google-voice')
+    , sqlite3 = require('sqlite3')
+    , githook = require('./lib/githook.sh')
   /* HTTP Stuff */
     , gitReceive = http.createServer()
     , shortServer = config.shortener.host
+  /* gv stuff */
+    , gvClient = new gv.Client({
+          email: config.gv.email
+        , password: config.gv.password
+        , rnr_se: config.gv.rnr_se
+      })
+  /* db stuff */
+    , db = new sqlite3.Database(config.dbName)
+    , tableDefs = {
+          users: "CREATE TABLE users (id INTEGER PRIMARY KEY, nick VARCHAR(80), phone VARCHAR(10), email VARCHAR(128));"
+        , chatlog: "CREATE TABLE chatlog (id INTEGER PRIMARY KEY, nick VARCHAR(80), message TEXT);"
+      }
     ;
 
   /**
    *
-   * Prevent Crashes! (sometimes github sends bad data)
+   * Prevent Crashes!
    *
    */
 
@@ -36,12 +40,12 @@
 
 
   /* IRC Stuff */  
-  ircClient.addListener('message' + config.channels[0], function(user, message) {
-    var messageArray
-      , userToSpam
-      , spamMessage
-      ;
+  ircClient.addListener('message', function(user, channel, message) {
     console.log(user + ' => ' + message);
+
+    if(nickMatch.test(message) && / register /.test(message)) {
+      registerUser(user, message.split(' '));      
+    }
 
     if(nickMatch.test(message)) {
       ircClient.say(config.channels[0], "I'm a hippopotamus!");
@@ -49,85 +53,48 @@
 
   });
 
-  /* http stuff */
 
-  function getShortLink(longLink, cb) {
-    var sendData = JSON.stringify({ target: longLink })
-      , reqOps = {
-          host: shortServer
-        , port: 80
-        , path: '/shorten'
-        , method: 'POST'
-        , headers: {
-              "Content-type": 'application/json'
-            , "Content-length": sendData.length
-          }
-        }
-      , req = http.request(reqOps, function(res) {
-          res.setEncoding('utf8');
-          res.on('data', function(data) {
-            try {
-              data = JSON.parse(data);
-            } catch(e) {
-              console.err('Bad data from shortener..');
-              cb(longLink);
-              return;
-            }
-            if(!data.hasOwnProperty('url')) {
-              console.err('Problem calling shortener...');
-              cb(longLink);
-              return;
-            }
-            cb(data.url);
-          });
-        })
+  function registerUser(nick, params) {
+    var baseIdx = params.indexOf('register')
+      , phone
+      , email
+      , sql = db.prepare()
       ;
     
-    req.write(sendData);
-    req.end();
+    if(!params[baseIdx + 1] || params[baseIdx + 1].length != 10) {
+      speak(nick, "Invalid phone number. 10 digits only.");
+      showRegisterHelp();
+      return;
+    }
+
+    if(!params[baseIdx + 2]) {
+      speak(nick, "Email address required.");
+      showRegisterHelp();
+      return;
+    }
+
+    phone = params[baseIdx + 1];
+    email = params[baseIdx + 2];
+
+    console.log('nick:', nick, 'phone', phone, 'email', email);
+
+    function showRegisterHelp() {
+      speak(nick, "Syntax: /msg bert register <phone_number> <email_address>");
+      speak(nick, "Example: /msg bert register 8015552039 some_email@some.tld");
+    }
   }
 
-  gitReceive.on('request', function(req,res) {
-    var rawData = ''
-      , data
-      ;
+  function speak(channel, message, color) {
+    if(color) {
+      message = irc.colors.wrap(color, message);
+    }
 
-    req.setEncoding('utf8');
+    ircClient.say(channel, message);
+  }
 
-    req.on('data', function(chunk) {
-      if(!chunk) {
-        return;
-      }
-      rawData += chunk.replace(/^payload=/, '');
-    });
-
-    req.on('end', function() {
-      res.end('Thanks!');
-      data = JSON.parse(decodeURIComponent(rawData));
-      data.commits.forEach(function(commit, index) {
-        var link
-          ;
-
-        if(commit.message.length > maxCommitMsg) {
-          commit.message = commit.message.substring(0, maxCommitMsg)
-          + '[...]';
-        }
-
-        getShortLink(commit.url, function(shortLink) {
-
-          ircClient.say(config.channels[0],
-            irc.colors.wrap('magenta', data.repository.name)
-            + '|' 
-            + irc.colors.wrap('light_cyan', commit.committer.username)
-            + ': '
-            + commit.message
-            + irc.colors.wrap('magenta', ' >> ')
-            + irc.colors.wrap('light_green', shortLink)
-          );
-        });
-      });
-    });
+  /* http stuff */
+  githook.on('push', function(data) {
+    speak(data);
   });
-  gitReceive.listen(config.gitPostPort);
 
 }());
