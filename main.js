@@ -4,6 +4,7 @@
   /* Requires */
   var irc = require('irc')
     , http = require('http')
+    , _ = require('underscore')
   /* IRC Stuff */
     , config = require('./config.js')
     , ircClient = new irc.Client(config.server, config.nick, {
@@ -116,7 +117,9 @@
         getShortLink(commit.url, function(shortLink) {
 
           ircClient.say(config.channels[0],
-            irc.colors.wrap('magenta', data.repository.name)
+            irc.colors.wrap('magenta', data.repository.name 
+            + '#'
+            + _.last(data.ref.split('/')))
             + '|' 
             + irc.colors.wrap('light_cyan', commit.committer.username)
             + ': '
