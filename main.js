@@ -8,7 +8,7 @@
     , http = require('http')
     , gv = require('google-voice')
     , sqlite3 = require('sqlite3')
-    , githook = require('./lib/githook.sh')
+    , githook = require('./lib/githook.js')
   /* HTTP Stuff */
     , gitReceive = http.createServer()
     , shortServer = config.shortener.host
