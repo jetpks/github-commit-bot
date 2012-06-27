@@ -12,18 +12,13 @@
   /* HTTP Stuff */
     , gitReceive = http.createServer()
     , shortServer = config.shortener.host
+    , db = require('./lib/db.js')
   /* gv stuff */
     , gvClient = new gv.Client({
           email: config.gv.email
         , password: config.gv.password
         , rnr_se: config.gv.rnr_se
       })
-  /* db stuff */
-    , db = new sqlite3.Database(config.dbName)
-    , tableDefs = {
-          users: "CREATE TABLE users (id INTEGER PRIMARY KEY, nick VARCHAR(80), phone VARCHAR(10), email VARCHAR(128));"
-        , chatlog: "CREATE TABLE chatlog (id INTEGER PRIMARY KEY, nick VARCHAR(80), message TEXT);"
-      }
     ;
 
   /**
